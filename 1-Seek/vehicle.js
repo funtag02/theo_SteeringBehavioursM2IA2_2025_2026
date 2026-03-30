@@ -16,7 +16,8 @@ class Vehicle {
 
   
   applyBehaviors(target) {
-    let force = this.seek(target);
+    // let force = this.seek(target);
+    let force = this.flee(target);
     this.applyForce(force);
   }
 
@@ -76,6 +77,7 @@ class Vehicle {
     this.acc.set(0, 0);
   }
 
+  /*
   // On dessine le véhicule
   show() {
     // sauvegarde du contexte graphique (couleur pleine, fil de fer, 
@@ -105,6 +107,12 @@ class Vehicle {
 
     // dessin sous la forme d'une flèche du vecteur vitesse
     this.drawVelocityVector();
+  }
+  */
+
+  show() {
+    imageMode(CENTER);
+    image(imgVehicule, this.pos.x, this.pos.y, 120, 120); // Affiche l'image du véhicule
   }
 
   drawVelocityVector() {

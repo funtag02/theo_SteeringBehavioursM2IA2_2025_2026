@@ -27,9 +27,18 @@ class Target extends Vehicle {
 
   }
 
+  /*
+
   show() {
     fill(this.color);
     noStroke();
     circle(this.pos.x, this.pos.y, this.r * 2);
+  }
+
+  */
+
+  show() {
+    imageMode(CENTER);
+    image(imgTarget, this.pos.x, this.pos.y, 200, 200); // Affiche l'image de la cible
   }
 }
