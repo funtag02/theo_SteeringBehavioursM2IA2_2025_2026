@@ -125,7 +125,7 @@ class Vehicle {
     pop();
   }
   
-  // que fait cette méthode ?
+  // que fait cette méthode ? : if position véhicule hors écran alors on le fait réapparaître de l'autre côté de l'écran
   edges() {
     if (this.pos.x > width + this.r) {
       this.pos.x = -this.r;
