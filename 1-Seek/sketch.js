@@ -2,15 +2,7 @@
 
 let target;
 let vehicules = [];
-let imgVehicule, imgTarget, imgBackground; // Variables pour les images
 let vitesseMaxSlider; // Déclare la variable vitesseMaxSlider ici
-
-// La fonction preload est appelée avant setup pour charger les ressources
-function preload() {
-  imgVehicule = loadImage('assets/6_7_boyy.png'); // Charge l'image pour les véhicules
-  imgTarget = loadImage('assets/e_word.jpeg'); // Charge l'image pour la cible
-  imgBackground = loadImage('assets/epstisland.jpg'); // Charge l'image de fond
-}
 
 // la fonction setup est appelée une fois au démarrage du programme par p5.js
 function setup() {
@@ -42,7 +34,6 @@ function creerVehicules(nbV) {
 
 function draw() {
   background("purple");
-  // image(imgBackground, 0, 0, width, height);
 
   // Affiche la cible
   target.update();
