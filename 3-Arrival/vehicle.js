@@ -254,8 +254,8 @@ class Vehicle {
     strokeWeight(2);
     push();
     translate(this.pos.x, this.pos.y);
-    if(this.vel.mag() > 0.2)
-      rotate(this.vel.heading());
+    // if(this.vel.mag() > 0.2)
+    rotate(this.vel.heading());
 
     triangle(-this.r, -this.r / 2, -this.r, this.r / 2, this.r, 0);
     pop();

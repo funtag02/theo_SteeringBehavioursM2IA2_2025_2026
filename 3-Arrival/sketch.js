@@ -1,5 +1,6 @@
 let target;
 let vehicles = [];
+let points = [];
 
 
 // Appelée avant de démarrer l'animation
@@ -15,7 +16,9 @@ function setup() {
   target = createVector(random(width), random(height));
 
   // on cree des vehicules, autant que de points
-  creerVehicules(2);
+  creerVehicules(25);
+
+  points = font.textToPoints("Master 2 IA2", width / 2 - 200, height / 2 + 50, 128, { "sampleFactor": 0.15 });
 }
 
 function creerVehicules(n) {
@@ -28,13 +31,19 @@ function creerVehicules(n) {
 // appelée 60 fois par seconde
 function draw() {
   // couleur pour effacer l'écran
-  background(0);
+  // background("darkblue");
+  //background(0);
   // pour effet psychedelique
-  //background(0, 0, 0, 10);
+  background(0, 0, 0, 10);
 
 
   target.x = mouseX;
   target.y = mouseY;
+
+  points.forEach((point) => {
+    ellipse(point.x, point.y, 6);
+  });
+
 
   // dessin de la cible à la position de la souris
   push();
@@ -48,9 +57,13 @@ function draw() {
   let steeringForce;
   // le premier véhicule suit la souris avec arrivée
   vehicles.forEach((vehicle, index) => {
-  
-    // le premier véhicule suit la souris avec arrivée
-    steeringForce = vehicle.arrive(target, 0);
+
+    if (index != 0) {
+      steeringForce = vehicle.arrive(vehicles[index-1].pos, 40);
+    } else {
+      // le premier véhicule suit la souris avec arrivée
+      steeringForce = vehicle.arrive(target, 0);
+    }
        vehicle.applyForce(steeringForce);
        vehicle.update();
       vehicle.show();
