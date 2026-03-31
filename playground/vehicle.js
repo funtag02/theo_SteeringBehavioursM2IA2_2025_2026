@@ -185,6 +185,8 @@ class Vehicle {
 
   flee(target) {
     // recopier code de flee de l'exemple précédent
+    // inverse de seek !
+    return this.seek(target).mult(-1);
   }
 
   seek(target, arrival = false, d=0) {
