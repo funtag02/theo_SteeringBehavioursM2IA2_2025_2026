@@ -19,9 +19,9 @@ let requin;
 
 function preload() {
   // On charge une image de poisson
-  fishImage = loadImage('assets/niceFishtransparent.png');
+  fishImage = loadImage('assets/ronaldo.png');
   //requinImage = loadImage('assets/requin.png');
-  requinImage = loadImage('assets/SharkTransparent.png');
+  requinImage = loadImage('assets/ronaldo-bicycle.png');
 
   // Préchargement du son du requin quand il mange un poisson
   soundFormats('mp3', 'ogg');
