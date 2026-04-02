@@ -4,7 +4,7 @@ let points = [];
 let obstacles = [];
 let gates = [];
 let snakeLength;
-let rayon = 16; // va redéfinir la taille des véhicules (seulement ceux qu'on dirige, pas les autres entités)
+let rayon = 14; // va redéfinir la taille des véhicules (seulement ceux qu'on dirige, pas les autres entités)
 let obstacleMinHeight, obstacleMaxHeight, obstacleMinWidth, obstacleMaxWidth;
 
 // Appelée avant de démarrer l'animation
