@@ -4,6 +4,7 @@ let points = [];
 let obstacles = [];
 let gates = [];
 let snakeLength;
+let rayon = 16; // va redéfinir la taille des véhicules (seulement ceux qu'on dirige, pas les autres entités)
 let obstacleMinHeight, obstacleMaxHeight, obstacleMinWidth, obstacleMaxWidth;
 
 // Appelée avant de démarrer l'animation
@@ -17,7 +18,7 @@ function setup() {
 
   snakeLength = 2;
   nbObstacles = 3;
-  nbGates = 1; 
+  nbGates = 4; 
   // si on traverse une porte et qu'on gagne un point, on augmente le nombre de véhicules du snake de 1, et on crée une nouvelle porte à un endroit aléatoire 
 
   // valeurs par copilot
@@ -70,20 +71,26 @@ function creerVehicules(n) {
   for (let i = 0; i < n; i++) {
     let v = new Vehicle(random(width), random(height));
     vehicles.push(v);
+    v.r = rayon;
   }
 }
 
 function creerGates(n) {
   const minDistanceBetweenGates = width / 4; // Distance minimale entre les gates
   const minDistanceFromObstacles = width / 10; // Distance minimale entre une gate et un obstacle
-  const maxDistanceFromObstacles = width / 4; // Distance maximale entre une gate et un obstacle
+  // const maxDistanceFromObstacles = width / 4; // Distance maximale entre une gate et un obstacle
+
+  const vehicleWidth = 16;
+  const minGateWidth = vehicleWidth * 4;
+
+  console.log(rayon);
 
   for (let i = 0; i < n; i++) {
     let x1, y1, x2, y2;
     let valid = false;
 
     let attempts = 0;
-    while (!valid && attempts < 100) {
+    while (!valid && attempts < 400) {
       attempts++;
 
       // Générer le premier point dans une zone large
@@ -93,6 +100,12 @@ function creerGates(n) {
       // Générer le deuxième point avec une distance plus grande pour élargir la gate
       x2 = x1 + random(-width / 6, width / 6);
       y2 = y1 + random(-height / 6, height / 6);
+
+      const gateWidth = dist(x1, y1, x2, y2);
+
+      if (gateWidth < minGateWidth) {
+        continue; // si jamais la gate est trop petite
+      }
 
       valid = true;
 
@@ -112,15 +125,20 @@ function creerGates(n) {
         const newGateCenter = createVector((x1 + x2) / 2, (y1 + y2) / 2);
         const distanceToObstacle = p5.Vector.dist(newGateCenter, obstacle.pos);
 
-        if (distanceToObstacle < minDistanceFromObstacles || distanceToObstacle > maxDistanceFromObstacles) {
+        // if (distanceToObstacle < minDistanceFromObstacles || distanceToObstacle > maxDistanceFromObstacles) {
+        // AVANT (impossible) :
+        // if (distanceToObstacle < minDistanceFromObstacles || distanceToObstacle > maxDistanceFromObstacles)
+        
+        // APRÈS : on exige seulement que la gate ne soit pas sur un obstacle
+        if (distanceToObstacle < minDistanceFromObstacles) {
           valid = false;
           break;
         }
       }
     }
 
-    if (attempts >= 100) {
-      console.warn("Impossible de placer une gate après 100 tentatives.");
+    if (attempts >= 400) {
+      console.warn("Impossible de placer une gate après 400 tentatives.");
       break;
     }
 
