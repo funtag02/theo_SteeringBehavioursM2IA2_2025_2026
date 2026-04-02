@@ -16,7 +16,7 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
-  snakeLength = 2;
+  snakeLength = 9;
   nbObstacles = 3;
   nbGates = 4; 
   // si on traverse une porte et qu'on gagne un point, on augmente le nombre de véhicules du snake de 1, et on crée une nouvelle porte à un endroit aléatoire 
