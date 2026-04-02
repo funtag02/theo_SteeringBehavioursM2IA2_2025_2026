@@ -69,9 +69,9 @@ This repo focuses ONLY on **steering layer**.
 
 ## 🚨 HARD CONSTRAINTS
 
-### 🔒 Vehicle.js is IMMUTABLE
+### 🔒 vehicle.js is IMMUTABLE
 
-* NEVER modify `Vehicle.js`
+* NEVER modify `vehicle.js`
 * NEVER duplicate its behaviors
 * NEVER override its internal logic
 
@@ -174,19 +174,20 @@ Combination methods:
 ### Required Structure
 
 ```
-Vehicle.js           // core (immutable)
+vehicle.js           // core (immutable) -- contains movement physics and steering behaviors like seek, pursue, flee, wander,...
 
-entities/
-  Enemy.js           // extends Vehicle
-  Player.js          // extends Vehicle
+goalGate.js           // extends Vehicle
+obstacle.js          // extends Vehicle
+target.js          // extends Vehicle
 
-behaviors/
-  SeekBehavior.js
-  WanderBehavior.js
-  CompositeBehavior.js
+sketch.js           // main code : setup() & draw() (main loop executed 60 times per second)
 
-controllers/
-  SteeringController.js
+index.html
+styles.css
+
+/assets             // images, logos, sounds, etc...
+/ libraries         // p5 imports
+
 ```
 
 ---
@@ -205,7 +206,7 @@ When generating code, an AI agent MUST:
 
 ### 1. Respect invariants
 
-* Do not modify `Vehicle.js`
+* Do not modify `vehicle.js`
 * Ensure all entities extend `Vehicle`
 
 ---
@@ -250,7 +251,7 @@ Before outputting code, ALWAYS verify:
 * [ ] Is it based on desired_velocity - velocity?
 * [ ] Is every entity a Vehicle subclass?
 * [ ] Are behaviors composable?
-* [ ] Is Vehicle.js untouched?
+* [ ] Is vehicle.js untouched?
 
 If ANY answer is NO → fix before responding.
 
@@ -271,7 +272,7 @@ The system should produce:
 
 Any generated solution is INVALID if:
 
-* it modifies `Vehicle.js`
+* it modifies `vehicle.js`
 * it creates non-Vehicle entities
 * it uses direct movement instead of forces
 * it merges behaviors into one function
