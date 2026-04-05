@@ -3,20 +3,40 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
+    <title>Snake Steering</title>
     <link rel="stylesheet" type="text/css" href="style.css">
 
+    <!-- Librairies p5 -->
     <script src="libraries/p5.min.js"></script>
     <script src="libraries/p5.sound.min.js"></script>
+
+    <!-- Config (chargée en premier, tout le monde en dépend) -->
+    <script src="config.js"></script>
+
+    <!-- Classe de base (immuable) -->
     <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-    <script src="target.js"></script>
+
+    <!-- Entités qui étendent Vehicle -->
     <script src="obstacle.js"></script>
     <script src="goalGate.js"></script>
+
+    <!-- Mobs (extend Vehicle via Mob) -->
+    <script src="mob.js"></script>
+    <script src="zombie.js"></script>
+    <script src="sheep.js"></script>
+    <script src="creeper.js"></script>
+    <script src="enderman.js"></script>
+
+    <!-- Boule de feu (extend Vehicle) -->
+    <script src="fireball.js"></script>
+
+    <!-- HUD (pas un Vehicle) -->
+    <script src="hud.js"></script>
+
+    <!-- Boucle principale (en dernier) -->
+    <script src="sketch.js"></script>
   </head>
   <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
+    <!-- Canvas p5.js injecté automatiquement -->
   </body>
 </html>

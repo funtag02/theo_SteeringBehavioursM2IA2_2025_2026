@@ -342,6 +342,42 @@ class Vehicle {
     return createVector(0, 0);
   }
 
+  getObstacleLePlusProche(obstacles) {
+    let plusPetiteDistance = 100000000;
+    let obstacleLePlusProche = undefined;
+
+    obstacles.forEach(o => {
+      // Je calcule la distance entre le vaisseau et l'obstacle
+      const distance = this.pos.dist(o.pos);
+
+      if (distance < plusPetiteDistance) {
+        plusPetiteDistance = distance;
+        obstacleLePlusProche = o;
+      }
+    });
+
+    return obstacleLePlusProche;
+  }
+
+  getVehiculeLePlusProche(vehicules) {
+    let plusPetiteDistance = Infinity;
+    let vehiculeLePlusProche = undefined;
+
+    vehicules.forEach(v => {
+      if (v != this) {
+        // Je calcule la distance entre le vaisseau et le vehicule
+        const distance = this.pos.dist(v.pos);
+        if (distance < plusPetiteDistance) {
+          plusPetiteDistance = distance;
+          vehiculeLePlusProche = v;
+        }
+      }
+    });
+
+    return vehiculeLePlusProche;
+  }
+
+
   applyForce(force) {
     this.acc.add(force);
   }

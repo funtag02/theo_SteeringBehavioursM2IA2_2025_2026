@@ -1,210 +1,394 @@
-let target;
-let vehicles = [];
-let points = [];
-let obstacles = [];
-let gates = [];
-let snakeLength;
-let rayon = 14; // va redéfinir la taille des véhicules (seulement ceux qu'on dirige, pas les autres entités)
-let obstacleMinHeight, obstacleMaxHeight, obstacleMinWidth, obstacleMaxWidth;
+// ============================================================
+// sketch.js — Boucle principale p5.js
+// ============================================================
 
-// Appelée avant de démarrer l'animation
+let vehicules  = [];   // segments du snake [0] = tête (nom compatible avec vehicle.js)
+let obstacles  = [];
+let gates      = [];   // portes actives
+let mobs       = [];
+let fireballs  = [];
+let hud;
+
+let gatesCleared = 0;
+let totalGates;
+
 function preload() {
-  // en général on charge des images, des fontes de caractères etc.
   font = loadFont('./assets/inconsolata.otf');
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  rectMode(CORNER);
 
-  snakeLength = 9;
-  nbObstacles = 3;
-  nbGates = 4; 
-  // si on traverse une porte et qu'on gagne un point, on augmente le nombre de véhicules du snake de 1, et on crée une nouvelle porte à un endroit aléatoire 
+  // Valeurs dynamiques de CONFIG
+  CONFIG.gates.minDistanceBetween       = width / 8;
+  CONFIG.gates.minDistanceFromObstacles = width / 10;
+  CONFIG.mobs.creeper.triggerRadius     = 3 * 16; // 3 × r_pourDessin
+  CONFIG.mobs.enderman.teleportRange    = width / 4;
 
-  // valeurs par copilot
-  obstacleMinHeight = height / 4;
-  obstacleMaxHeight = height - height / 4;
-  obstacleMinWidth = width / 4;
-  obstacleMaxWidth = width - width / 4;
+  totalGates = CONFIG.gates.total;
 
-  // La cible, ce sera la position de la souris
-  target = createVector(random(width), random(height));
-  creerObstacles(nbObstacles);
-  creerGates(nbGates); // doit être appelé après la création des obstacles pour éviter les collisions avec des obstacles
-  // on cree des vehicules, autant que de points
-  creerVehicules(snakeLength);
+  hud = new HUD();
 
-  // points = font.textToPoints("Master 2 IA2", width / 2 - 200, height / 2 + 50, 128, { "sampleFactor": 0.15 });
+  creerObstacles(CONFIG.obstacles.count);
+  creerGates(totalGates);
+  creerVehicules(CONFIG.snake.initialLength);
+  creerMobs();
 }
 
+// -------------------------------------------------------
+// Création obstacles
+// -------------------------------------------------------
 function creerObstacles(n) {
-  const minDistance = height / 4; // Distance minimale entre les obstacles
+  const minDist = height / 4;
 
   for (let i = 0; i < n; i++) {
     let x, y, r;
     let valid = false;
 
     while (!valid) {
-      // Générer un obstacle avec des coordonnées aléatoires
       x = random(width);
       y = random(height);
-      r = random(20, 50); // Rayon aléatoire pour l'obstacle
-
+      r = random(CONFIG.obstacles.minRadius, CONFIG.obstacles.maxRadius);
       valid = true;
 
-      // Vérifier la distance avec les autres obstacles
-      for (let obstacle of obstacles) {
-        const distance = dist(x, y, obstacle.pos.x, obstacle.pos.y);
-        if (distance < minDistance + r + obstacle.r) {
+      for (let obs of obstacles) {
+        if (dist(x, y, obs.pos.x, obs.pos.y) < minDist + r + obs.r) {
           valid = false;
           break;
         }
       }
     }
-
-    // Ajouter l'obstacle au tableau
     obstacles.push(new Obstacle(x, y, r));
   }
 }
 
+// -------------------------------------------------------
+// Création véhicules (snake)
+// -------------------------------------------------------
 function creerVehicules(n) {
   for (let i = 0; i < n; i++) {
-    let v = new Vehicle(random(width), random(height));
-    vehicles.push(v);
-    v.r = rayon;
+    vehicules.push(new Vehicle(width / 2 - i * 40, height / 2));
   }
 }
 
+// -------------------------------------------------------
+// Création gates
+// -------------------------------------------------------
 function creerGates(n) {
-  const minDistanceBetweenGates = width / 4; // Distance minimale entre les gates
-  const minDistanceFromObstacles = width / 10; // Distance minimale entre une gate et un obstacle
-  // const maxDistanceFromObstacles = width / 4; // Distance maximale entre une gate et un obstacle
-
-  const vehicleWidth = 16;
-  const minGateWidth = vehicleWidth * 4;
-
-  console.log(rayon);
+  const minDistGates = CONFIG.gates.minDistanceBetween;
+  const minDistObs   = CONFIG.gates.minDistanceFromObstacles;
+  const margin       = CONFIG.gates.spawnMargin;
+  const minOpening   = CONFIG.gates.minOpeningFactor * 16; // 4 × r_pourDessin
 
   for (let i = 0; i < n; i++) {
     let x1, y1, x2, y2;
-    let valid = false;
-
+    let valid    = false;
     let attempts = 0;
-    while (!valid && attempts < 400) {
+
+    while (!valid && attempts < CONFIG.gates.maxAttempts) {
       attempts++;
 
-      // Générer le premier point dans une zone large
-      x1 = random(width / 4, (3 * width) / 4);
-      y1 = random(height / 4, (3 * height) / 4);
-
-      // Générer le deuxième point avec une distance plus grande pour élargir la gate
+      x1 = random(width * margin, width * (1 - margin));
+      y1 = random(height * margin, height * (1 - margin));
       x2 = x1 + random(-width / 6, width / 6);
       y2 = y1 + random(-height / 6, height / 6);
 
-      const gateWidth = dist(x1, y1, x2, y2);
-
-      if (gateWidth < minGateWidth) {
-        continue; // si jamais la gate est trop petite
+      // Garantir ouverture minimale
+      const gateSize = dist(x1, y1, x2, y2);
+      if (gateSize < minOpening) {
+        const dx    = x2 - x1 || 1;
+        const dy    = y2 - y1 || 0;
+        const scale = minOpening / gateSize;
+        x2 = x1 + dx * scale;
+        y2 = y1 + dy * scale;
       }
 
       valid = true;
 
-      // Vérifier la distance avec les autres gates
+      // Distance minimale entre gates
       for (let gate of gates) {
-        const gateCenter = createVector((gate.start.x + gate.end.x) / 2, (gate.start.y + gate.end.y) / 2);
-        const newGateCenter = createVector((x1 + x2) / 2, (y1 + y2) / 2);
-
-        if (p5.Vector.dist(gateCenter, newGateCenter) < minDistanceBetweenGates) {
-          valid = false;
-          break;
-        }
+        const gc  = createVector((gate.start.x + gate.end.x) / 2, (gate.start.y + gate.end.y) / 2);
+        const ngc = createVector((x1 + x2) / 2, (y1 + y2) / 2);
+        if (p5.Vector.dist(gc, ngc) < minDistGates) { valid = false; break; }
       }
+      if (!valid) continue;
 
-      // Vérifier la distance avec les obstacles
-      for (let obstacle of obstacles) {
-        const newGateCenter = createVector((x1 + x2) / 2, (y1 + y2) / 2);
-        const distanceToObstacle = p5.Vector.dist(newGateCenter, obstacle.pos);
-
-        // if (distanceToObstacle < minDistanceFromObstacles || distanceToObstacle > maxDistanceFromObstacles) {
-        // AVANT (impossible) :
-        // if (distanceToObstacle < minDistanceFromObstacles || distanceToObstacle > maxDistanceFromObstacles)
-        
-        // APRÈS : on exige seulement que la gate ne soit pas sur un obstacle
-        if (distanceToObstacle < minDistanceFromObstacles) {
-          valid = false;
-          break;
-        }
+      // Distance minimale aux obstacles
+      for (let obs of obstacles) {
+        const ngc = createVector((x1 + x2) / 2, (y1 + y2) / 2);
+        if (p5.Vector.dist(ngc, obs.pos) < minDistObs) { valid = false; break; }
       }
     }
 
-    if (attempts >= 400) {
-      console.warn("Impossible de placer une gate après 400 tentatives.");
-      break;
+    if (attempts >= CONFIG.gates.maxAttempts) {
+      console.warn(`Gate ${i} non placée après ${CONFIG.gates.maxAttempts} tentatives.`);
+      continue;
     }
 
-    // Ajouter la gate au tableau
-    gates.push(new GoalGate(x1, y1, x2, y2));
+    gates.push(new GoalGate(x1, y1, x2, y2, randomGateType()));
   }
 }
-// appelée 60 fois par seconde
-function draw() {
-  // couleur pour effacer l'écran
-  background("black");
-  //background(0);
-  // pour effet psychedelique
-  // background(0, 0, 0, 10);
 
-  target.x = mouseX;
-  target.y = mouseY;
+// -------------------------------------------------------
+// Création mobs initiaux
+// -------------------------------------------------------
+function creerMobs() {
+  for (let i = 0; i < 2; i++) {
+    mobs.push(spawnMob('zombie'));
+    mobs.push(spawnMob('sheep'));
+  }
+}
 
-  console.log(obstacles.length);
+function spawnMob(type) {
+  let x, y;
+  let attempts = 0;
+  do {
+    x = random(width);
+    y = random(height);
+    attempts++;
+  } while (
+    attempts < 50 &&
+    vehicules.length > 0 &&
+    dist(x, y, vehicules[0].pos.x, vehicules[0].pos.y) < 150
+  );
 
-  /*
-  points.forEach((point) => {
-    ellipse(point.x, point.y, 6);
-  });
-  */
+  switch (type) {
+    case 'zombie':   return new Zombie(x, y);
+    case 'sheep':    return new Sheep(x, y);
+    case 'creeper':  return new Creeper(x, y);
+    case 'enderman': return new Enderman(x, y);
+  }
+}
 
-  obstacles.forEach((obstacle, index) => {
-    //console.log("obstacle n°" + index + " x: " + obstacle.pos.x + " y: " + obstacle.pos.y);
-    // obstacle.update();
-    // obstacle.edges();
-    obstacle.show();
-  });
+// -------------------------------------------------------
+// Difficulté dynamique
+// -------------------------------------------------------
+let lastDifficultyLength = 0;
 
-  gates.forEach( (gate, index) => {
-    // gate.edges();
-    gate.show();
-  });
+function updateDifficulty() {
+  const len = vehicules.length;
+  if (len === lastDifficultyLength) return;
+  lastDifficultyLength = len;
 
-  /*
-  // dessin de la cible à la position de la souris
-  push();
-  fill(255, 0, 0);
-  noStroke();
-  ellipse(target.x, target.y, 32);
-  pop();
-  */
-
-  // les véhicules bougent aléatoirement, et évitent les obstacles
-
-  vehicles.forEach((vehicle, index) => {
-
-    if (index != 0) {
-      steeringForce = vehicle.arrive(vehicles[index-1].pos, 40);
-    } else {
-      // le premier véhicule suit la souris avec arrivée
-      steeringForce = vehicle.arrive(target, 0);
+  for (let t of CONFIG.difficulty.thresholds) {
+    if (len === t.snakeLength) {
+      for (let i = 0; i < t.extraZombies; i++) mobs.push(spawnMob('zombie'));
+      if (t.speedBoost > 0) {
+        for (let mob of mobs) {
+          if (mob instanceof Zombie || mob instanceof Creeper || mob instanceof Enderman) {
+            mob.maxSpeed += t.speedBoost;
+          }
+        }
+      }
     }
-       vehicle.applyForce(steeringForce);
-       vehicle.update();
-      vehicle.show();
-  });
+  }
 
+  const hasEnderman = mobs.some(m => m instanceof Enderman);
+  if (len >= CONFIG.mobs.spawnThresholds.enderman && !hasEnderman) {
+    mobs.push(spawnMob('enderman'));
+  }
+
+  const hasCreeper = mobs.some(m => m instanceof Creeper);
+  if (len >= CONFIG.mobs.spawnThresholds.creeper && !hasCreeper) {
+    mobs.push(spawnMob('creeper'));
+  }
+}
+
+// -------------------------------------------------------
+// Mort partielle
+// -------------------------------------------------------
+function partialDeath(fromIndex) {
+  const lost = vehicules.length - fromIndex;
+  if (lost <= 0) return;
+  vehicules.splice(fromIndex);
+  hud.addScore(CONFIG.gates.points.perSegmentLost * lost);
+}
+
+// -------------------------------------------------------
+// draw() — 60 fps
+// -------------------------------------------------------
+function draw() {
+  background(20, 20, 30);
+
+  if (!hud.frozen) updateDifficulty();
+
+  // --- Obstacles ---
+  for (let obs of obstacles) obs.show();
+
+  // --- Gates ---
+  for (let gate of gates) {
+    gate.checkExpiration();
+    gate.show();
+  }
+  gates = gates.filter(g => !g.dead);
+
+  // --- Snake ---
+  for (let i = 0; i < vehicules.length; i++) {
+    const v = vehicules[i];
+
+    if (!hud.frozen) {
+      let steeringForce;
+      if (i === 0) {
+        steeringForce = v.seek(createVector(mouseX, mouseY), true);
+      } else {
+        steeringForce = v.seek(vehicules[i - 1].pos, true);
+      }
+      v.applyForce(steeringForce);
+      v.update();
+    }
+
+    v.show();
+  }
+
+  if (!hud.frozen && vehicules.length > 0) {
+    const head = vehicules[0];
+
+    // Collision snake sur lui-même → game over
+    for (let i = 4; i < vehicules.length; i++) {
+      if (p5.Vector.dist(head.pos, vehicules[i].pos) < head.r_pourDessin * 1.5) {
+        hud.freeze(false);
+        break;
+      }
+    }
+
+    // Collisions avec les gates
+    for (let gate of gates) {
+
+      if (gate.checkCrossing(head)) {
+        hud.addScore(gate.getPassPoints());
+
+        if (gate.type !== GATE_TYPE.TRAP) {
+          gatesCleared++;
+          const last = vehicules[vehicules.length - 1];
+          vehicules.push(new Vehicle(last.pos.x, last.pos.y));
+        } else {
+          partialDeath(max(1, floor(vehicules.length / 2)));
+        }
+
+        if (gatesCleared >= totalGates) hud.freeze(true);
+        break;
+      }
+
+      for (let i = 0; i < vehicules.length; i++) {
+        if (gate.checkPostCollision(vehicules[i])) {
+          hud.addScore(CONFIG.gates.points.hitPost);
+          partialDeath(max(1, i + 1));
+          break;
+        }
+      }
+    }
+
+    // Mobs update & collisions
+    for (let mob of mobs) {
+      if (mob.dead) continue;
+
+      if (mob instanceof Sheep) {
+        mob.update(obstacles);
+      } else {
+        mob.update(head, obstacles);
+      }
+
+      // Creeper explosion
+      if (mob instanceof Creeper && mob.checkExplosionDamage()) {
+        mob.markExploded();
+        hud.addScore(CONFIG.mobs.damage.creeperExplosion);
+        for (let i = vehicules.length - 1; i >= 1; i--) {
+          if (p5.Vector.dist(mob.pos, vehicules[i].pos) < CONFIG.mobs.creeper.explosionRadius) {
+            vehicules.splice(i, 1);
+          }
+        }
+      }
+
+      // Zombie / Enderman touche la tête
+      if ((mob instanceof Zombie || mob instanceof Enderman) && mob.collidesWith(head)) {
+        hud.addScore(CONFIG.mobs.damage.seekerHitsHead);
+        partialDeath(max(1, floor(vehicules.length / 2)));
+      }
+
+      // Mouton touche un segment
+      if (mob instanceof Sheep) {
+        for (let i = 0; i < vehicules.length; i++) {
+          if (mob.collidesWith(vehicules[i])) {
+            hud.addScore(CONFIG.mobs.damage.wandererHitsBody);
+            partialDeath(max(1, i + 1));
+            break;
+          }
+        }
+      }
+
+      mob.show();
+    }
+
+    // Nettoyage mobs morts + attribution points
+    mobs = mobs.filter(m => {
+      if (m.dead) {
+        if (m instanceof Zombie)   hud.addScore(CONFIG.mobs.points.zombie);
+        if (m instanceof Sheep)    hud.addScore(CONFIG.mobs.points.sheep);
+        if (m instanceof Creeper)  hud.addScore(CONFIG.mobs.points.creeper);
+        if (m instanceof Enderman) hud.addScore(CONFIG.mobs.points.enderman);
+        return false;
+      }
+      return true;
+    });
+
+  } else {
+    for (let mob of mobs) mob.show();
+  }
+
+  // --- Boules de feu ---
+  for (let fb of fireballs) {
+    if (!fb.dead) {
+      fb.update(mobs);
+      fb.show();
+    }
+  }
+  fireballs = fireballs.filter(fb => !fb.dead);
+
+  // --- HUD ---
+  hud.draw(totalGates - gatesCleared, totalGates);
+}
+
+// -------------------------------------------------------
+// Inputs
+// -------------------------------------------------------
+function mousePressed() {
+  if (hud.frozen || vehicules.length === 0 || mobs.length === 0) return;
+
+  let closest     = null;
+  let closestDist = Infinity;
+  const cursor    = createVector(mouseX, mouseY);
+
+  for (let mob of mobs) {
+    if (mob.dead) continue;
+    const d = p5.Vector.dist(cursor, mob.pos);
+    if (d < closestDist) {
+      closestDist = d;
+      closest     = mob;
+    }
+  }
+
+  if (closest) {
+    fireballs.push(new Fireball(vehicules[0].pos.x, vehicules[0].pos.y, closest));
+  }
 }
 
 function keyPressed() {
-  if (key === 'd') {
+  if (key === 'd' || key === 'D') {
     Vehicle.debug = !Vehicle.debug;
-  } 
+  }
+  if (key === 'r' || key === 'R') {
+    vehicules            = [];
+    obstacles            = [];
+    gates                = [];
+    mobs                 = [];
+    fireballs            = [];
+    gatesCleared         = 0;
+    lastDifficultyLength = 0;
+    setup();
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
