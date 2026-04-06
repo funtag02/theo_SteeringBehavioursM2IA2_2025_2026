@@ -1,10 +1,12 @@
-# Snake Steering
+# [Snake Steering](https://funtag02.github.io/theo_SteeringBehavioursM2IA2_2025_2026/)
 
 ## L'idée
 
-Le point de départ c'est simple : et si on prenait le snake classique, mais qu'au lieu de déplacer le serpent case par case sur une grille, chaque segment était un agent autonome régi par des forces physiques ? C'est le principe des steering behaviors de Craig Reynolds, et c'est ce que ce projet explore.
+Le point de départ c'est simple : et si on prenait le snake classique, mais qu'au lieu de déplacer le serpent case par case sur une grille, chaque segment était un agent autonome régi par des forces physiques ? 
 
-La tête suit la souris, et chaque segment suivant arrive vers le précédent grâce à un comportement d'arrivée progressive. Le résultat c'est un serpent qui ondule de manière organique, qui freine naturellement dans les virages, et qui donne l'impression d'être vivant plutôt que d'être scripté. L'ambiance est inspirée de Minecraft — les ennemis, les créatures, la palette sombre.
+La tête suit la souris, et chaque segment suivant arrive vers le précédent grâce à un comportement d'arrivée progressive. Le résultat c'est un serpent qui ondule de manière organique, qui freine naturellement dans les virages, et qui donne l'impression d'être vivant plutôt que d'être scripté. 
+
+L'ambiance est inspirée de Minecraft — les ennemis, les créatures, la palette sombre.
 
 ## Comment ça marche
 
@@ -40,7 +42,7 @@ Les dégâts des zombies marchent pas exactement comme je voulais. L'idée c'ét
 
 La fin de partie est cassée dès qu'il y a des portes éphémères. Je me suis rendu compte un peu tard que si une porte éphémère disparaît avant qu'on la passe, le compteur de portes restantes ne sera jamais à zéro, et comme j'ai mis un chrono et pas un timer, la partie devient interminable. C'est un vrai problème de conception que j'aurais du anticiper.
 
-L'évitement des obstacles par les créatures marche pas non plus. La méthode `avoid()` est bien dans la classe Vehicle, mais elle a besoin de `getObstacleLePlusProche()` et `getVehiculeLePlusProche()` qui existaient pas dans la version du fichier que j'avais. J'ai surement mal recopié la méthode depuis un autre projet, et j'ai pas eu le temps de fix ça proprement.
+L'évitement des obstacles par les créatures marche pas non plus. La méthode `avoid()` est bien dans la classe Vehicle, mais elle est incomplète, j'ai surement mal recopié la méthode depuis un autre répertoire, et j'ai pas eu le temps de fix ça proprement.
 
 ## Points d'amélioration
 
@@ -50,6 +52,8 @@ J'aimerais aussi avoir un vrai système de niveaux, avec un fichier de config pa
 
 Un leaderboard local serait sympa pour donner un vrai objectif entre les parties, et des effets de particules sur les explosions et les impacts de boules de feu rendraient les collisions beaucoup plus lisibles.
 
+Bref beaucoup d'améliorations UX sont à faire, pourquoi pas revoir l'UI même si celle basique existante est déjà une bonne base simple.
+
 ## Contrôles
 
 | Action | Contrôle |
@@ -58,3 +62,8 @@ Un leaderboard local serait sympa pour donner un vrai objectif entre les parties
 | Lancer une boule de feu | Clic gauche |
 | Mode debug | D |
 | Rejouer | R |
+
+## Détails techniques supplémentaires
+
+IDE : VSCode 
+Modèles IA utilisés : pour les specs, Gemini 3 (Raisonnement) -- pour le code, Claude Sonnet 4.6 (le goat) principalement, quelques fois chatgpt pour des demandes plus simples mais Claude est indétrônable pour le code selon moi.
